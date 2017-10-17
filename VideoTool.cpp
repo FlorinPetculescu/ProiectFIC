@@ -10,12 +10,20 @@ using namespace std;
 using namespace cv;
 //initial min and max HSV filter values.
 //these will be changed using trackbars
-int H_MIN = 0;
-int H_MAX = 256;
-int S_MIN = 0;
+int H_MIN = 145;
+int H_MAX = 251;
+int S_MIN = 61;
 int S_MAX = 256;
 int V_MIN = 0;
 int V_MAX = 256;
+
+int H_MIN2=27;
+int H_MAX2=168;
+int S_MIN2=61;
+int S_MAX2= 256;
+int V_MIN2 = 0;
+int V_MAX2 = 256;
+
 //default capture width and height
 const int FRAME_WIDTH = 640;
 const int FRAME_HEIGHT = 480;
@@ -187,17 +195,17 @@ int main(int argc, char* argv[])
 	//Matrix to store each frame of the webcam feed
 	Mat cameraFeed;
 	//matrix storage for HSV image
-	Mat HSV;
+	Mat HSV, HSV2;
 	//matrix storage for binary threshold image
-	Mat threshold;
+	Mat threshold, treshold2;
 	//x and y values for the location of the object
 	int x = 0, y = 0;
 	//create slider bars for HSV filtering
 	createTrackbars();
 	//video capture object to acquire webcam feed
-	VideoCapture capture;
+	VideoCapture capture; 
 	//open capture object at location zero (default location for webcam)
-	capture.open(0);
+	capture.open("rtmp://172.16.254.99/live/nimic");
 	//set height and width of capture frame
 	capture.set(CV_CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
 	capture.set(CV_CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
@@ -217,20 +225,29 @@ int main(int argc, char* argv[])
 		//filter HSV image between values and store filtered image to
 		//threshold matrix
 		inRange(HSV, Scalar(H_MIN, S_MIN, V_MIN), Scalar(H_MAX, S_MAX, V_MAX), threshold);
+    inRange(HSV2, Scalar(H_MIN2, S_MIN2, V_MIN2), Scalar(H_MAX2, S_MAX2, V_MAX2), threshold2);
 		//perform morphological operations on thresholded image to eliminate noise
 		//and emphasize the filtered object(s)
 		if (useMorphOps)
+    {
 			morphOps(threshold);
+     }
 		//pass in thresholded frame to our object tracking function
 		//this function will return the x and y coordinates of the
 		//filtered object
 		if (trackObjects)
+    {
 			trackFilteredObject(x, y, threshold, cameraFeed);
-
+    }
+    waitKey(30);
+    if(useMorphOps)
+      morphOps(threshold2);
+   	if (trackObjects)
+		  trackFilteredObject(x, y, threshold, cameraFeed);
 		//show frames
 		imshow(windowName2, threshold);
 		imshow(windowName, cameraFeed);
-		imshow(windowName1, HSV);
+		//imshow(windowName1, HSV);
 		setMouseCallback("Original Image", on_mouse, &p);
 		//delay 30ms so that screen can refresh.
 		//image will not appear without this waitKey() command
@@ -239,4 +256,3 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
-
