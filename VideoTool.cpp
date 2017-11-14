@@ -12,7 +12,7 @@
 #include <netinet/in.h>
 
 #include <string.h>
-
+#include<unistd.h>
 using namespace std;
 using namespace cv;
 //initial min and max HSV filter values.
@@ -47,18 +47,18 @@ const std::string windowName3 = "After Morphological Operations";
 const std::string trackbarWindowName = "Trackbars";
 void misca(char *c){
 
-  if(strchr(c,"fblr")!=0)
+  //if(strchr(c,"fblr")!=0)
    int sockfd, portno, n;
    struct sockaddr_in serv_addr;
    struct hostent *server;
    
    char buffer[256];
    
-   if (argc < 3) {
+  /*if (argc < 3) {
       fprintf(stderr,"usage %s hostname port\n", argv[0]);
       exit(0);
-   }
-	
+   }*/
+    char aux[]="fblr";
    portno = 20232;
    
    /* Create a socket point */
@@ -96,11 +96,16 @@ void misca(char *c){
    fgets(buffer,255,stdin);
    
    /* Send message to the server */
-   n = write(sockfd, buffer, strlen(buffer));
-   
+   for(int i=0;i<strlen(aux);i++){
+     char buff[2];
+     buff[0]=aux[i];
+     n = write(sockfd, buff, strlen(buff));
+     sleep(1);
+ 
    if (n < 0) {
       perror("ERROR writing to socket");
       exit(1);
+   }
    }
    
    /* Now read server response */
@@ -143,12 +148,19 @@ void createTrackbars() {
 	namedWindow(trackbarWindowName, 0);
 	//create memory to store trackbar name on window
 	char TrackbarName[50];
-	sprintf(TrackbarName, "H_MIN", H_MIN);
-	sprintf(TrackbarName, "H_MAX", H_MAX);
-	sprintf(TrackbarName, "S_MIN", S_MIN);
-	sprintf(TrackbarName, "S_MAX", S_MAX);
-	sprintf(TrackbarName, "V_MIN", V_MIN);
-	sprintf(TrackbarName, "V_MAX", V_MAX);
+	sprintf(TrackbarName, "H_MIN %d", H_MIN);
+	sprintf(TrackbarName, "H_MAX %d", H_MAX);
+	sprintf(TrackbarName, "S_MIN %d", S_MIN);
+	sprintf(TrackbarName, "S_MAX %d", S_MAX);
+	sprintf(TrackbarName, "V_MIN %d", V_MIN);
+	sprintf(TrackbarName, "V_MAX %d", V_MAX);
+ 
+ sprintf(TrackbarName, "H_MIN2 %d", H_MIN2);
+	sprintf(TrackbarName, "H_MAX2 %d", H_MAX2);
+	sprintf(TrackbarName, "S_MIN2 %d", S_MIN2);
+	sprintf(TrackbarName, "S_MAX2 %d", S_MAX2);
+	sprintf(TrackbarName, "V_MIN2 %d", V_MIN2);
+	sprintf(TrackbarName, "V_MAX2 %d", V_MAX2);
 	//create trackbars and insert them into window
 	//3 parameters are: the address of the variable that is changing when the trackbar is moved(eg.H_LOW),
 	//the max value the trackbar can move (eg. H_HIGH),
@@ -205,8 +217,6 @@ void morphOps(Mat &thresh) {
 
 	dilate(thresh, thresh, dilateElement);
 	dilate(thresh, thresh, dilateElement);
-
-
 
 }
 void trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed) {
@@ -272,7 +282,7 @@ int main(int argc, char* argv[])
 	//matrix storage for HSV image
 	Mat HSV, HSV2;
 	//matrix storage for binary threshold image
-	Mat threshold, treshold2;
+	Mat threshold, threshold2;
 	//x and y values for the location of the object
 	int x = 0, y = 0;
 	//create slider bars for HSV filtering
@@ -289,12 +299,12 @@ int main(int argc, char* argv[])
 
 
 
-	
 	while (1) {
-
 
 		//store image to matrix
 		capture.read(cameraFeed);
+   if(cameraFeed.empty())
+      printf("ERROR");
 		//convert frame from BGR to HSV colorspace
 		cvtColor(cameraFeed, HSV, COLOR_BGR2HSV);
 		//filter HSV image between values and store filtered image to
@@ -321,6 +331,7 @@ int main(int argc, char* argv[])
 		  trackFilteredObject(x, y, threshold2, cameraFeed);
 		//show frames
 		imshow(windowName2, threshold);
+    imshow(windowName2, threshold2);
 		imshow(windowName, cameraFeed);
 		//imshow(windowName1, HSV);
 		setMouseCallback("Original Image", on_mouse, &p);
